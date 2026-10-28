@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bee-Bot’s Flower Trail</title>
+  <style>
+    :root { color-scheme: light; --ink:#283a35; --muted:#6e7e75; --green:#39765b; --cream:#fffaf0; --gold:#f6c852; }
+    * { box-sizing:border-box }
+    body { margin:0; min-height:100vh; color:var(--ink); font-family: ui-rounded, "Avenir Next", Avenir, system-ui, sans-serif; background:radial-gradient(ellipse at 15% 10%,#fff6dc 0,transparent 35%),linear-gradient(145deg,#f4f9ee,#eaf4ed); }
+    main { width:min(1020px,100%); margin:auto; padding:34px 22px 42px }
+    header { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:24px }
+    .brand { display:flex; align-items:center; gap:13px }
+    .brand-icon { display:grid; place-items:center; width:50px;height:50px;border-radius:17px;background:#ffe79b;font-size:29px;box-shadow:0 5px 0 #edd17a }
+    h1 { margin:0; font-size:clamp(1.5rem,4vw,2rem); letter-spacing:-.04em }
+    .subtitle { margin:3px 0 0;color:var(--muted);font-size:.94rem }
+    .badge { padding:9px 13px; border:1px solid #d8e5d9; border-radius:999px; background:#ffffffa8; color:#54735f;font-size:.82rem;font-weight:700;white-space:nowrap }
+    .layout { display:grid;grid-template-columns:minmax(290px,1.15fr) minmax(280px,.85fr);gap:22px;align-items:stretch }
+    .card { border:1px solid #e1e8dc; border-radius:24px; background:#fffefa; box-shadow:0 12px 35px #314d3210 }
+    .board-card { padding:22px }
+    .card-heading { display:flex;justify-content:space-between;align-items:center;margin-bottom:16px }
+    h2 { margin:0;font-size:1.05rem;letter-spacing:-.02em }
+    .level {font-size:.8rem;font-weight:700;color:#8d7850;background:#fff5d7;border-radius:99px;padding:6px 10px}
+    .board { display:grid;grid-template-columns:repeat(3,1fr);gap:9px;aspect-ratio:1; padding:10px;border-radius:19px;background:#eaf2e7;border:1px solid #dce8d8 }
+    .cell { display:grid;place-items:center;position:relative;border-radius:14px;background:#fffefa;border:1px solid #e4eadf; min-width:0 }
+    .cell.start {background:#fff7e7}.cell.goal {background:#fff3cf}
+    .tile-icon {font-size:clamp(1.45rem,5vw,2.6rem);line-height:1;filter:drop-shadow(0 2px 1px #00000012)}
+    .flower-art {width:clamp(42px,12vw,76px);height:clamp(42px,12vw,76px);filter:drop-shadow(0 2px 1px #00000012)}
+    .tile-label {position:absolute;bottom:7px;font-size:clamp(.58rem,1.7vw,.73rem);font-weight:800;letter-spacing:.03em;color:#8a7956;text-transform:uppercase}
+    .bot { position:absolute;z-index:2;display:grid;place-items:center;width:64%;height:64%;border-radius:35%;background:linear-gradient(150deg,#ffe881,#f5c13e);border:3px solid #e2ab2b;box-shadow:0 5px 0 #d4a12f,0 7px 12px #44351520;transition:transform .28s ease; }
+    .bot-face {font-size:clamp(1.4rem,5vw,2.2rem);line-height:1}
+    .bot-arrow {position:absolute;right:-6px;top:50%;transform:translateY(-50%);font-size:1.25rem;color:#795315;text-shadow:0 1px white}
+    .right-col {display:flex;flex-direction:column;gap:18px}
+    .controls {padding:22px}
+    .section-note {margin:6px 0 16px;color:var(--muted);font-size:.86rem;line-height:1.45}
+    .direction-pad {display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:250px;margin:0 auto 17px}
+    button {font:inherit;cursor:pointer;transition:transform .12s,box-shadow .12s,background .12s}
+    button:active {transform:translateY(2px)}
+    .cmd {min-height:48px;border:1px solid #dce6d8;border-radius:13px;background:#f8fbf5;color:#385544;font-weight:800;box-shadow:0 3px 0 #e2e9df}
+    .cmd:hover {background:#eef7eb}.cmd:focus-visible,.primary:focus-visible,.secondary:focus-visible {outline:3px solid #8bbd90;outline-offset:2px}
+    .cmd.forward {grid-column:2;grid-row:1}.cmd.left {grid-column:1;grid-row:2}.cmd.right {grid-column:3;grid-row:2}.cmd.turn {font-size:1.15rem}
+    .program-label {display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:.83rem;font-weight:800}
+    .count {color:#8b9a8e;font-weight:700}
+    .program {display:flex;gap:7px;align-items:center;min-height:54px;padding:8px;border:1px dashed #d6e1d3;border-radius:13px;background:#fbfcf8;overflow-x:auto}
+    .empty {color:#a0aaa0;font-size:.82rem;white-space:nowrap}
+    .step-chip {flex:0 0 auto;display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:#fff0bd;color:#755d1e;font-size:1.05rem;font-weight:900}
+    .actions {display:flex;gap:9px;margin-top:14px}
+    .primary,.secondary {min-height:44px;border-radius:12px;padding:0 15px;font-weight:800}
+    .primary {flex:1;border:0;background:var(--green);color:white;box-shadow:0 4px 0 #285d43}.primary:hover{background:#2f694e}
+    .secondary {border:1px solid #dce6d8;background:#fff;color:#63746a}.secondary:hover{background:#f5f8f2}
+    .status {padding:15px 17px;border-radius:16px;background:#edf5e9;color:#4c6f52;font-size:.9rem;line-height:1.45;min-height:56px;display:flex;align-items:center;gap:10px}
+    .status-icon {font-size:1.2rem}
+    .tip {padding:17px 20px;color:#68756a;font-size:.84rem;line-height:1.5}.tip strong{color:#425447}
+    @media(max-width:720px){main{padding:22px 15px 32px}.layout{grid-template-columns:1fr;max-width:520px;margin:auto}.board-card{padding:17px}.controls{padding:19px}header{align-items:flex-start}.badge{font-size:.72rem;padding:7px 10px}}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}}
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="brand"><div class="brand-icon" aria-hidden="true">🐝</div><div><h1>Bee-Bot’s Flower Trail</h1><p class="subtitle">Can you help the little bee find its way home?</p></div></div>
+      <div class="badge">🌼 A little coding adventure</div>
+    </header>
+    <div class="layout">
+      <section class="card board-card" aria-label="Game board">
+        <div class="card-heading"><h2>Garden grid</h2><span class="level">3 × 3</span></div>
+        <div class="board" id="board" role="grid" aria-label="Three by three garden grid"></div>
+      </section>
+      <div class="right-col">
+        <section class="card controls">
+          <h2>Plan a path</h2><p class="section-note">Add commands, then press <strong>Go!</strong> to send Bee-Bot on its way.</p>
+          <div class="direction-pad" aria-label="Add a command">
+            <button class="cmd forward" data-command="forward" aria-label="Move forward">↑ <span>Forward</span></button>
+            <button class="cmd left turn" data-command="left" aria-label="Turn left">↶</button>
+            <button class="cmd right turn" data-command="right" aria-label="Turn right">↷</button>
+          </div>
+          <div class="program-label"><span>Your commands</span><span class="count" id="count">0 steps</span></div>
+          <div class="program" id="program" aria-live="polite"><span class="empty">Your path will appear here</span></div>
+          <div class="actions"><button class="primary" id="go">Go! ▶</button><button class="secondary" id="undo">Undo</button><button class="secondary" id="clear">Clear</button><button class="secondary" id="reset">Reset</button></div>
+        </section>
+        <div class="status" id="status" role="status" aria-live="polite"><span class="status-icon">💡</span><span>Bee-Bot is at the flower. Add a move to begin!</span></div>
+        <div class="card tip"><strong>How to play</strong><br>↑ moves one square in the direction Bee-Bot is facing. ↶ and ↷ turn in place. Reach the hive to win!</div>
+      </div>
+    </div>
+  </main>
+  <script>
+    (() => {
+      const board = document.querySelector('#board');
+      const programEl = document.querySelector('#program');
+      const countEl = document.querySelector('#count');
+      const statusEl = document.querySelector('#status');
+      const dirs = [[-1,0],[0,1],[1,0],[0,-1]]; // up, right, down, left
+      const arrows = ['↑','→','↓','←'];
+      const names = {forward:'Forward',left:'Turn left',right:'Turn right'};
+      const icons = {forward:'↑',left:'↶',right:'↷'};
+      const commands = [];
+      const start = {r:2,c:0};
+      const goal = {r:0,c:2};
+      let bot = { ...start, dir:1 };
+      let running = false;
+      let won = false;
+
+      function setStatus(icon, message) { statusEl.innerHTML = `<span class="status-icon">${icon}</span><span>${message}</span>`; }
+      function drawBoard() {
+        board.innerHTML = '';
+        for (let r=0;r<3;r++) for(let c=0;c<3;c++) {
+          const cell=document.createElement('div'); cell.className='cell'; cell.setAttribute('role','gridcell');
+          if(r===start.r&&c===start.c) cell.classList.add('start');
+          if(r===goal.r&&c===goal.c) cell.classList.add('goal');
+          if(r===start.r&&c===start.c){cell.innerHTML='<svg class="flower-art" viewBox="0 0 100 100" aria-hidden="true"><g fill="#ffd52a" stroke="#f2ad12" stroke-width="2"><ellipse cx="50" cy="19" rx="11" ry="22"/><ellipse cx="50" cy="19" rx="11" ry="22" transform="rotate(30 50 50)"/><ellipse cx="50" cy="19" rx="11" ry="22" transform="rotate(60 50 50)"/><ellipse cx="50" cy="19" rx="11" ry="22" transform="rotate(90 50 50)"/><ellipse cx="50" cy="19" rx="11" ry="22" transform="rotate(120 50 50)"/><ellipse cx="50" cy="19" rx="11" ry="22" transform="rotate(150 50 50)"/><ellipse cx="50" cy="19" rx="11" ry="22" transform="rotate(180 50 50)"/><ellipse cx="50" cy="19" rx="11" ry="22" transform="rotate(210 50 50)"/><ellipse cx="50" cy="19" rx="11" ry="22" transform="rotate(240 50 50)"/><ellipse cx="50" cy="19" rx="11" ry="22" transform="rotate(270 50 50)"/><ellipse cx="50" cy="19" rx="11" ry="22" transform="rotate(300 50 50)"/><ellipse cx="50" cy="19" rx="11" ry="22" transform="rotate(330 50 50)"/></g><circle cx="50" cy="50" r="17" fill="#7a391e"/><circle cx="50" cy="50" r="11" fill="#34241b"/><g fill="#f6be35"><circle cx="45" cy="44" r="1.5"/><circle cx="54" cy="44" r="1.5"/><circle cx="43" cy="52" r="1.5"/><circle cx="57" cy="52" r="1.5"/><circle cx="50" cy="59" r="1.5"/></g></svg><span class="tile-label">Flower</span>';}
+          if(r===goal.r&&c===goal.c){cell.innerHTML='<span class="tile-icon" aria-hidden="true">🍯</span><span class="tile-label">Hive</span>';}
+          if(r===bot.r&&c===bot.c){const bee=document.createElement('div');bee.className='bot';bee.setAttribute('role','img');bee.setAttribute('aria-label',`Bee-Bot facing ${['up','right','down','left'][bot.dir]}`);bee.innerHTML=`<span class="bot-face" aria-hidden="true">🐝</span><span class="bot-arrow" aria-hidden="true">${arrows[bot.dir]}</span>`;cell.append(bee);}
+          board.append(cell);
+        }
+      }
+      function renderProgram() {
+        programEl.innerHTML='';
+        if(!commands.length){programEl.innerHTML='<span class="empty">Your path will appear here</span>';}
+        commands.forEach((cmd,i)=>{const chip=document.createElement('span');chip.className='step-chip';chip.title=`${i+1}: ${names[cmd]}`;chip.setAttribute('aria-label',`${i+1}, ${names[cmd]}`);chip.textContent=icons[cmd];programEl.append(chip);});
+        countEl.textContent=`${commands.length} ${commands.length===1?'step':'steps'}`;
+        document.querySelector('#go').disabled=running||!commands.length||won;
+        document.querySelector('#undo').disabled=running||!commands.length;
+        document.querySelector('#clear').disabled=running||!commands.length;
+        document.querySelectorAll('.cmd').forEach(b=>b.disabled=running||won);
+      }
+      function addCommand(cmd){if(running||won)return;commands.push(cmd);renderProgram();setStatus('🧭',`${names[cmd]} added. Keep planning, then press Go!`);}
+      document.querySelectorAll('[data-command]').forEach(b=>b.addEventListener('click',()=>addCommand(b.dataset.command)));
+      document.querySelector('#undo').addEventListener('click',()=>{commands.pop();renderProgram();setStatus('↩️','Last command removed.');});
+      document.querySelector('#clear').addEventListener('click',()=>{commands.length=0;renderProgram();setStatus('🧹','Commands cleared. Bee-Bot is ready for a new path.');});
+      document.querySelector('#reset').addEventListener('click',()=>{if(running)return;commands.length=0;bot={...start,dir:1};won=false;drawBoard();renderProgram();setStatus('🌼','Bee-Bot is back at the flower. Plan a new path!');});
+      document.querySelector('#go').addEventListener('click',async()=>{
+        if(running||!commands.length)return;running=true;renderProgram();
+        for(const command of commands){
+          if(command==='left')bot.dir=(bot.dir+3)%4;
+          else if(command==='right')bot.dir=(bot.dir+1)%4;
+          else {const [dr,dc]=dirs[bot.dir];const nr=bot.r+dr,nc=bot.c+dc;if(nr<0||nr>2||nc<0||nc>2){setStatus('🪴','Oops! Bee-Bot bumped into the garden edge. Try a new path.');break;}bot.r=nr;bot.c=nc;}
+          drawBoard();await new Promise(resolve=>setTimeout(resolve,440));
+          if(bot.r===goal.r&&bot.c===goal.c){won=true;setStatus('🎉','You did it! Bee-Bot found the hive!');break;}
+        }
+        if(!won&&bot.r!==goal.r||!won&&bot.c!==goal.c){if(statusEl.textContent.includes('Oops!')){}else setStatus('🐝','Bee-Bot stopped. Try another set of commands to reach the hive!');}
+        running=false;renderProgram();
+      });
+      renderProgram();drawBoard();
+    })();
+  </script>
+</body>
+</html>
